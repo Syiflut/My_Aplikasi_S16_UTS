@@ -1,132 +1,157 @@
 package com.app.my_aplikasi_s16;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Patterns;
-import android.widget.*;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    // 01. Deklarasi sesuai XML terbaru
-    private EditText etNama, etEmail, etPassword, etConfirmPassword;
+    private EditText etNama, etEmail, etPhone;
     private RadioGroup rgGender;
-    private CheckBox cbCooking, cbMusik, cbTravel, cbOlahraga, cbGame;
-    private Spinner spinnerKota;
-    private Button btnLogin;
+    private Spinner spinnerSeminar;
+    private CheckBox cbAgreement;
+    private Button btnDaftar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 02. Inisialisasi View
+        // Inisialisasi ID
         etNama = findViewById(R.id.etNama);
         etEmail = findViewById(R.id.etEmail);
-        etPassword = findViewById(R.id.etPassword);
-        etConfirmPassword = findViewById(R.id.etConfirmPassword);
+        etPhone = findViewById(R.id.etPhone);
         rgGender = findViewById(R.id.rgGender);
-        cbCooking = findViewById(R.id.cbCooking);
-        cbMusik = findViewById(R.id.cbMusik);
-        cbTravel = findViewById(R.id.cbTraveling);
-        cbOlahraga = findViewById(R.id.cbOlahraga);
-        cbGame = findViewById(R.id.cbGame);
-        spinnerKota = findViewById(R.id.spinnerKota);
-        btnLogin = findViewById(R.id.btnLogin);
+        spinnerSeminar = findViewById(R.id.spinnerSeminar);
+        cbAgreement = findViewById(R.id.cbAgreement);
+        btnDaftar = findViewById(R.id.btnDaftar);
 
-        // 03. Setup Spinner Data
-        String[] listKota = {"Jakarta", "Bandung", "Surabaya", "Medan"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_dropdown_item, listKota);
-        spinnerKota.setAdapter(adapter);
+        etPhone.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-        // 04. AKTIFKAN REAL-TIME VALIDATION
-        setupRealTimeValidation();
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String input = s.toString();
+                if (!input.startsWith("08")) {
+                    etPhone.setError("Harus diawali 08");
+                } else if (input.length() < 10 || input.length() > 13) {
+                    etPhone.setError("Harus 10-13 digit");
+                } else {
+                    etPhone.setError(null); // Hilangkan error jika sudah benar
+                }
+            }
 
-        // 05. Gesture Interaction (Long Press)
-        btnLogin.setOnLongClickListener(v -> {
-            Toast.makeText(MainActivity.this, "Data disimpan sebagai Draft!", Toast.LENGTH_SHORT).show();
-            return true;
+            @Override
+            public void afterTextChanged(android.text.Editable s) {}
         });
 
-        // Tombol Daftar
-        btnLogin.setOnClickListener(v -> {
+        // Setup Spinner (Poin 2.5 - Minimal 5 pilihan)
+        String[] daftarSeminar = {
+                "Web Development Dasar",
+                "Android Expert with Java",
+                "Cyber Security Awareness",
+                "Data Science Intro",
+                "UI/UX Design Masterclass"
+        };
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, daftarSeminar);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerSeminar.setAdapter(adapter);
+
+        // Klik Tombol Daftar
+        btnDaftar.setOnClickListener(v -> {
+            // Poin 3: Jalankan validasi input
             if (isDataValid()) {
+                // Poin 4: Munculkan dialog konfirmasi
                 showConfirmDialog();
             }
         });
     }
 
-    // Fungsi Poin 02: Real-time Validation
-    private void setupRealTimeValidation() {
-        // Cek Email saat mengetik
-        etEmail.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (!Patterns.EMAIL_ADDRESS.matcher(s).matches()) {
-                    etEmail.setError("Format email salah!");
-                }
-            }
-            @Override public void afterTextChanged(Editable s) {}
-        });
-
-        // Cek Konfirmasi Password saat mengetik
-        etConfirmPassword.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String pass = etPassword.getText().toString();
-                if (!s.toString().equals(pass)) {
-                    etConfirmPassword.setError("Password tidak cocok!");
-                }
-            }
-            @Override public void afterTextChanged(Editable s) {}
-        });
-    }
-
-    // Fungsi Poin 02 & 03: Validasi Akhir
     private boolean isDataValid() {
-        if (etNama.getText().toString().isEmpty()) {
-            etNama.setError("Nama tidak boleh kosong");
-            return false;
-        }
-        if (!Patterns.EMAIL_ADDRESS.matcher(etEmail.getText()).matches()) {
-            etEmail.setError("Email tidak valid");
-            return false;
-        }
-        if (etPassword.getText().length() < 6) {
-            etPassword.setError("Password minimal 6 karakter");
-            return false;
-        }
-        if (!etConfirmPassword.getText().toString().equals(etPassword.getText().toString())) {
-            etConfirmPassword.setError("Password tidak match");
+        String nama = etNama.getText().toString().trim();
+        String email = etEmail.getText().toString().trim();
+        String phone = etPhone.getText().toString().trim();
+
+        // 3.1 & 3.2: Semua field wajib diisi & tampilkan error
+        if (nama.isEmpty()) {
+            etNama.setError("Nama wajib diisi!");
             return false;
         }
 
-        // Poin 03: Cek minimal 3 hobi
-        int count = 0;
-        if (cbCooking.isChecked()) count++;
-        if (cbMusik.isChecked()) count++;
-        if (cbTravel.isChecked()) count++;
-        if (cbOlahraga.isChecked()) count++;
-        if (cbGame.isChecked()) count++;
-
-        if (count < 3) {
-            Toast.makeText(this, "Pilih minimal 3 hobi!", Toast.LENGTH_SHORT).show();
+        // 3.3: Validasi Email harus ada "@"
+        if (email.isEmpty() || !email.contains("@")) {
+            etEmail.setError("Email harus valid (mengandung @)!");
             return false;
         }
+
+        // 3.4: Validasi Nomor HP (08, Angka, 10-13 digit)
+        if (phone.isEmpty()) {
+            etPhone.setError("Nomor HP wajib diisi!");
+            return false;
+        } else if (!phone.startsWith("08")) {
+            etPhone.setError("Harus diawali 08");
+            return false;
+        } else if (phone.length() < 10 || phone.length() > 13) {
+            etPhone.setError("Panjang harus 10-13 digit");
+            return false;
+        }
+
+        // 3.6: Validasi Checkbox belum dicentang
+        if (!cbAgreement.isChecked()) {
+            Toast.makeText(this, "Centang persetujuan dulu!", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
         return true;
     }
 
     private void showConfirmDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Konfirmasi")
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Konfirmasi")
                 .setMessage("Apakah data sudah benar?")
+                // Tombol "Ya" -> lanjut ke halaman hasil
                 .setPositiveButton("Ya", (dialog, which) -> {
-                    Toast.makeText(this, "Registrasi Berhasil!", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Batal", null)
-                .show();
+                    // Ambil data dari inputan
+                    String nama = etNama.getText().toString();
+                    String email = etEmail.getText().toString();
+                    String phone = etPhone.getText().toString();
+
+                    // Ambil nilai gender yang dipilih
+                    int selectedId = rgGender.getCheckedRadioButtonId();
+                    RadioButton rb = findViewById(selectedId);
+                    String gender = (rb != null) ? rb.getText().toString() : "-";
+
+                    // Ambil nilai seminar dari spinner
+                    String seminar = spinnerSeminar.getSelectedItem().toString();
+
+                    // Pindah ke ResultActivity (Poin 5)
+                    Intent intent = new Intent(MainActivity.this, ResultActivity.class);
+                    intent.putExtra("NAMA", nama);
+                    intent.putExtra("EMAIL", email);
+                    intent.putExtra("PHONE", phone);
+                    intent.putExtra("GENDER", gender);
+                    intent.putExtra("SEMINAR", seminar);
+                    startActivity(intent);
+                });
+
+        // Tombol "Tidak" -> tetap di halaman form
+        builder.setNegativeButton("Tidak", (dialog, which) -> {
+            dialog.dismiss(); // Menutup dialog tanpa pindah halaman
+        });
+
+        // Tampilkan dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }

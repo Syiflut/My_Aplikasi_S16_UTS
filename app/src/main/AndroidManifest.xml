@@ -12,13 +12,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.My_Aplikasi_S16">
         <activity
-            android:name=".MainActivity"
+            android:name=".ResultActivity"
+            android:exported="false" />
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
         </activity>
     </application>
 
